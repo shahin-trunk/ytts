@@ -147,7 +147,7 @@ pip install TTS
 If you plan to code or train models, clone 🐸TTS and install it locally.
 
 ```bash
-git clone https://github.com/coqui-ai/TTS
+git clone https://github.com/shahin-trunk/ytts.git
 pip install -e .[all,dev,notebooks]  # Select the relevant extras
 ```
 
