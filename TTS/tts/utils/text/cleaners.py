@@ -2,11 +2,10 @@
 # TODO: pick the cleaner for languages dynamically
 
 import re
-
 from anyascii import anyascii
+from unidecode import unidecode
 
 from TTS.tts.utils.text.chinese_mandarin.numbers import replace_numbers_to_characters_in_text
-
 from .english.abbreviations import abbreviations_en
 from .english.number_norm import normalize_numbers as en_normalize_numbers
 from .english.time_norm import expand_time_english
@@ -83,10 +82,15 @@ def basic_cleaners(text):
     return text
 
 
+def basic_cleaners_uncase(text):
+    """Basic pipeline that collapses whitespace without transliteration."""
+    text = collapse_whitespace(text)
+    return text
+
+
 def transliteration_cleaners(text):
     """Pipeline for non-English text that transliterates to ASCII."""
-    # text = convert_to_ascii(text)
-    text = lowercase(text)
+    text = unidecode(text)
     text = collapse_whitespace(text)
     return text
 
@@ -161,5 +165,11 @@ def multilingual_cleaners(text):
     text = lowercase(text)
     text = replace_symbols(text, lang=None)
     text = remove_aux_symbols(text)
+    text = collapse_whitespace(text)
+    return text
+
+
+def ar_bw_cleaners(text):
+    """Pipeline for arabic buckwalter text"""
     text = collapse_whitespace(text)
     return text
