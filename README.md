@@ -148,7 +148,7 @@ If you plan to code or train models, clone 🐸TTS and install it locally.
 
 ```bash
 git clone https://github.com/shahin-trunk/ytts.git
-pip install -e .[all,dev,notebooks]  # Select the relevant extras
+pip install -e .[all,dev,notebooks]  # Select the relevant extras of your choice.
 ```
 
 If you are on Ubuntu (Debian), you can also run following commands for installation.
