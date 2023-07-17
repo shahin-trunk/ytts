@@ -723,3 +723,53 @@ def iiai_transliteration(root_path, meta_file, **kwargs):
             items.append({"text": text, "audio_file": wav_file, "speaker_name": speaker_name, "root_path": root_path})
 
     return items
+
+
+def iiai_se(root_path, meta_file, **kwargs):
+    items = []
+    base_dir = "/data/asr/workspace/audio/tts"
+    manifest_path = os.path.join(root_path, meta_file)
+    with open(manifest_path) as src_m:
+        for line in src_m:
+            jd = json.loads(line.strip("\n").strip())
+            wav_file = os.path.join(base_dir, jd["audio_filepath"])
+            text = ""
+            speaker_name = jd["speaker"]
+            items.append({"text": text, "audio_file": wav_file, "speaker_name": speaker_name, "root_path": base_dir})
+
+    return items
+
+
+def iiai_diac_ar_faraza_emotion(root_path, meta_file, **kwargs):
+    items = []
+    manifest_path = os.path.join(root_path, meta_file)
+    with open(manifest_path) as src_m:
+        for line in src_m:
+            jd = json.loads(line.strip("\n").strip())
+            wav_file = jd["audio_filepath"]
+            emotion_name = jd["emotion_name"] if (
+                    "emotion_name" in jd and jd["emotion_name"] not in ["", None]) else None
+            text = str(jd["ar_faraza"]).strip()
+            speaker_name = "spk_{}".format(jd["speaker"])
+            items.append({"text": text,
+                          "audio_file": wav_file,
+                          "speaker_name": speaker_name,
+                          "root_path": root_path,
+                          "emotion_name": emotion_name if emotion_name is not None else "neutral",
+                          })
+
+    return items
+
+
+def iiai_en(root_path, meta_file, **kwargs):
+    items = []
+    manifest_path = os.path.join(root_path, meta_file)
+    with open(manifest_path) as src_m:
+        for line in src_m:
+            jd = json.loads(line.strip("\n").strip())
+            wav_file = jd["audio_filepath"]
+            text = str(jd["text"]).strip()
+            speaker_name = "spk_{}".format(jd["speaker"])
+            items.append({"text": text, "audio_file": wav_file, "speaker_name": speaker_name, "root_path": root_path})
+
+    return items

@@ -1,25 +1,27 @@
 import os
 
 from TTS.encoder.configs.speaker_encoder_config import SpeakerEncoderConfig
-# from TTS.encoder.configs.emotion_encoder_config import EmotionEncoderConfig
 from TTS.tts.configs.shared_configs import BaseDatasetConfig
 
-CURRENT_PATH = os.getcwd()
-# change the root path to the TTS root path
-os.chdir("../../../")
+# Definitions ###
+HOME = "/data/asr/workspace/audio/tts"
+VERSION = "v1"
 
-### Definitions ###
 # dataset
-VCTK_PATH = "/raid/datasets/VCTK_NEW_16khz_removed_silence_silero_vad/"  # download:  https://datashare.ed.ac.uk/bitstream/handle/10283/3443/VCTK-Corpus-0.92.zipdddddddddd
-RIR_SIMULATED_PATH = "/raid/datasets/DA/RIRS_NOISES/simulated_rirs/"  # download: https://www.openslr.org/17/
-MUSAN_PATH = "/raid/datasets/DA/musan/"  # download: https://www.openslr.org/17/
+# download: https://www.openslr.org/17/
+RIR_SIMULATED_PATH = os.path.join(HOME, "models/speaker_encoding/RIRS_NOISES/simulated_rirs")
+
+# download: https://www.openslr.org/17/
+MUSAN_PATH = os.path.join(HOME, "models/speaker_encoding/musan/")
+
+LANGUAGE = "ar"
+IIAI_DATASET_PATH = os.path.join(HOME, "data/audio/manifest")
 
 # training
-OUTPUT_PATH = os.path.join(
-    CURRENT_PATH, "resnet_speaker_encoder_training_output/"
-)  # path to save the train logs and checkpoint
+OUTPUT_PATH = os.path.join(HOME, f"expmt/se/{LANGUAGE}/{VERSION}")
+os.makedirs(OUTPUT_PATH, exist_ok=True)
 CONFIG_OUT_PATH = os.path.join(OUTPUT_PATH, "config_se.json")
-RESTORE_PATH = None  # Checkpoint to use for transfer learning if None ignore
+RESTORE_PATH = None  # os.path.join(HOME, "models/speaker_encoding/model_se_en.pt")
 
 # instance the config
 # to speaker encoder
@@ -28,34 +30,43 @@ config = SpeakerEncoderConfig()
 # config = EmotionEncoderConfig()
 
 
-#### DATASET CONFIG ####
-# The formatter need to return the key "speaker_name"  for the speaker encoder and the "emotion_name" for the emotion encoder
-dataset_config = BaseDatasetConfig(formatter="vctk", meta_file_train="", language="en-us", path=VCTK_PATH)
+# ### DATASET CONFIG ####
+# The formatter need to return the key "speaker_name"  for the speaker encoder and the
+# "emotion_name" for the emotion encoder
+dataset_config = BaseDatasetConfig(formatter="iiai_se",
+                                   dataset_name="iiai_yt_60k_spk",
+                                   meta_file_train="manifest_se_2_37s.json",
+                                   language=LANGUAGE,
+                                   path=IIAI_DATASET_PATH)
 
 # add the dataset to the config
 config.datasets = [dataset_config]
 
-#### TRAINING CONFIG ####
-# The encoder data loader balancer the dataset item equally to guarantee better training and to attend the losses requirements
-# It have two parameters to control the final batch size the number total of speaker used in each batch and the number of samples for each speaker
+# ### TRAINING CONFIG ####
+# The encoder data loader balancer the dataset item equally to guarantee better training and
+# to attend the losses requirements. It has two parameters to control the final batch size the number total of
+# speaker used in each batch and the number of samples for each speaker
 
 # number total of speaker in batch in training
-config.num_classes_in_batch = 100
+config.num_classes_in_batch = 512
 # number of utterance per class/speaker in the batch in training
-config.num_utter_per_class = 4
+config.num_utter_per_class = 2
 # final batch size = config.num_classes_in_batch * config.num_utter_per_class
 
+# filter_small_samples below 2.0 sec
+filter_small_samples = False
+
 # number total of speaker in batch in evaluation
-config.eval_num_classes_in_batch = 100
+config.eval_num_classes_in_batch = 128
 # number of utterance per class/speaker in the batch in evaluation
-config.eval_num_utter_per_class = 4
+config.eval_num_utter_per_class = 2
 
 # number of data loader workers
 config.num_loader_workers = 8
 config.num_val_loader_workers = 8
 
 # number of epochs
-config.epochs = 10000
+config.epochs = 73000
 # loss to be used in training
 config.loss = "softmaxproto"
 
@@ -68,7 +79,7 @@ config.output_path = OUTPUT_PATH
 # Save local checkpoint every save_step steps
 config.save_step = 2000
 
-### Model Config ###
+# ### Model Config ###
 config.model_params = {
     "model_name": "resnet",  # supported "lstm" and "resnet"
     "input_dim": 64,
@@ -77,8 +88,8 @@ config.model_params = {
     "proj_dim": 512,  # embedding dim
 }
 
-# Audio Config ###
-# To fast train the model divides the audio in small parts. it parameter defines the length in seconds of these "parts"
+# Audio Config ### To fast train the model divides the audio in small parts. This parameter defines the length in
+# seconds of these "parts"
 config.voice_len = 2.0
 # all others configs
 config.audio = {
@@ -129,8 +140,8 @@ config.save_json(CONFIG_OUT_PATH)
 
 print(CONFIG_OUT_PATH)
 if RESTORE_PATH is not None:
-    command = f"python TTS/bin/train_encoder.py --config_path {CONFIG_OUT_PATH} --restore_path {RESTORE_PATH}"
+    command = f"python3 {HOME}/TTS/TTS/bin/train_encoder.py --config_path {CONFIG_OUT_PATH} --restore_path {RESTORE_PATH}"
 else:
-    command = f"python TTS/bin/train_encoder.py --config_path {CONFIG_OUT_PATH}"
+    command = f"python3 {HOME}/TTS/TTS/bin/train_encoder.py --config_path {CONFIG_OUT_PATH}"
 
 os.system(command)

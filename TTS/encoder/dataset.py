@@ -8,16 +8,17 @@ from TTS.encoder.utils.generic_utils import AugmentWAV
 
 class EncoderDataset(Dataset):
     def __init__(
-        self,
-        config,
-        ap,
-        meta_data,
-        voice_len=1.6,
-        num_classes_in_batch=64,
-        num_utter_per_class=10,
-        verbose=False,
-        augmentation_config=None,
-        use_torch_spec=None,
+            self,
+            config,
+            ap,
+            meta_data,
+            voice_len=1.6,
+            num_classes_in_batch=64,
+            num_utter_per_class=10,
+            verbose=False,
+            augmentation_config=None,
+            use_torch_spec=None,
+            filter_small_samples=True,
     ):
         """
         Args:
@@ -27,6 +28,7 @@ class EncoderDataset(Dataset):
             verbose (bool): print diagnostic information.
         """
         super().__init__()
+        print("\n > Begin EncoderDataset...")
         self.config = config
         self.items = meta_data
         self.sample_rate = ap.sample_rate
@@ -35,15 +37,20 @@ class EncoderDataset(Dataset):
         self.ap = ap
         self.verbose = verbose
         self.use_torch_spec = use_torch_spec
+        self.filter_small_samples = filter_small_samples
         self.classes, self.items = self.__parse_items()
 
         self.classname_to_classid = {key: i for i, key in enumerate(self.classes)}
+
+        # print(f" | > classname_to_classid: {self.classname_to_classid}")
+        print(f" | > augmentation_config: {augmentation_config}")
 
         # Data Augmentation
         self.augmentator = None
         self.gaussian_augmentation_config = None
         if augmentation_config:
             self.data_augmentation_p = augmentation_config["p"]
+            print(f" | > data_augmentation_p: {self.data_augmentation_p}")
             if self.data_augmentation_p and ("additive" in augmentation_config or "rir" in augmentation_config):
                 self.augmentator = AugmentWAV(ap, augmentation_config)
 
@@ -56,29 +63,41 @@ class EncoderDataset(Dataset):
             print(f" | > Number of instances : {len(self.items)}")
             print(f" | > Sequence length: {self.seq_len}")
             print(f" | > Num Classes: {len(self.classes)}")
-            print(f" | > Classes: {self.classes}")
+            # print(f" | > Classes: {self.classes}")
 
     def load_wav(self, filename):
         audio = self.ap.load_wav(filename, sr=self.ap.sample_rate)
         return audio
 
     def __parse_items(self):
+        print(f" | > Parsing items: {len(self.items)}")
         class_to_utters = {}
         for item in self.items:
+            # print(f" | > Parsing item: {item}")
+            # print(f" | > class_name_key: {self.config.class_name_key}")
             path_ = item["audio_file"]
             class_name = item[self.config.class_name_key]
+            # print(f" | > class_name: {class_name}")
             if class_name in class_to_utters.keys():
                 class_to_utters[class_name].append(path_)
             else:
-                class_to_utters[class_name] = [
-                    path_,
-                ]
+                class_to_utters[class_name] = [path_, ]
 
-        # skip classes with number of samples >= self.num_utter_per_class
+            if len(class_to_utters) % 10000 == 0:
+                print(f" | > class_to_utters: {len(class_to_utters)}")
+
+        # select classes with number of samples >= self.num_utter_per_class
         class_to_utters = {k: v for (k, v) in class_to_utters.items() if len(v) >= self.num_utter_per_class}
 
-        classes = list(class_to_utters.keys())
-        classes.sort()
+        print(f"\n | > class_to_utters final: {len(class_to_utters)}")
+
+        classes = set(sorted(list(class_to_utters.keys())))
+        # classes.sort()
+
+        # print(f" | > classes: {classes}")
+        print(f" | > num of classes: {len(classes)}")
+        print(f" | > seq_len: {self.seq_len}")
+        print(f" | > filter_small_samples: {self.filter_small_samples}")
 
         new_items = []
         for item in self.items:
@@ -87,12 +106,17 @@ class EncoderDataset(Dataset):
             # ignore filtered classes
             if class_name not in classes:
                 continue
+
             # ignore small audios
-            if self.load_wav(path_).shape[0] - self.seq_len <= 0:
-                continue
+            if self.filter_small_samples:
+                if self.load_wav(path_).shape[0] - self.seq_len <= 0:
+                    continue
 
             new_items.append({"wav_file_path": path_, "class_name": class_name})
+            if len(new_items) % 10000 == 0:
+                print(f" | > new_items: {len(new_items)}")
 
+        print(f" | > new_items final: {len(new_items)}")
         return classes, new_items
 
     def __len__(self):
@@ -127,7 +151,7 @@ class EncoderDataset(Dataset):
             # load wav file
             wav = self.load_wav(utter_path)
             offset = random.randint(0, wav.shape[0] - self.seq_len)
-            wav = wav[offset : offset + self.seq_len]
+            wav = wav[offset: offset + self.seq_len]
 
             if self.augmentator is not None and self.data_augmentation_p:
                 if random.random() < self.data_augmentation_p:

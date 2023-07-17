@@ -14,12 +14,14 @@ from TTS.utils.io import save_fsspec
 
 class AugmentWAV(object):
     def __init__(self, ap, augmentation_config):
+        print("\n > Begin AugmentWAV...")
         self.ap = ap
         self.use_additive_noise = False
 
         if "additive" in augmentation_config.keys():
             self.additive_noise_config = augmentation_config["additive"]
             additive_path = self.additive_noise_config["sounds_path"]
+            print(f" | > additive_path: {additive_path}")
             if additive_path:
                 self.use_additive_noise = True
                 # get noise types
@@ -30,17 +32,24 @@ class AugmentWAV(object):
 
                 additive_files = glob.glob(os.path.join(additive_path, "**/*.wav"), recursive=True)
 
+                print(f" | > additive_noise_types: {self.additive_noise_types}")
+                print(f" | > additive_files: {len(additive_files)}")
+
                 self.noise_list = {}
 
                 for wav_file in additive_files:
+                    # print(f" | > wav_file: {wav_file}")
                     noise_dir = wav_file.replace(additive_path, "").split(os.sep)[0]
+                    # print(f" | > noise_dir: {noise_dir}")
                     # ignore not listed directories
                     if noise_dir not in self.additive_noise_types:
                         continue
-                    if not noise_dir in self.noise_list:
+                    if noise_dir not in self.noise_list:
                         self.noise_list[noise_dir] = []
+
                     self.noise_list[noise_dir].append(wav_file)
 
+                # print(f" | > noise_list: {self.noise_list}")
                 print(
                     f" | > Using Additive Noise Augmentation: with {len(additive_files)} audios instances from {self.additive_noise_types}"
                 )
@@ -49,10 +58,12 @@ class AugmentWAV(object):
 
         if "rir" in augmentation_config.keys():
             self.rir_config = augmentation_config["rir"]
+            print(f" | > rir_path: {self.rir_config['rir_path']}")
             if self.rir_config["rir_path"]:
                 self.rir_files = glob.glob(os.path.join(self.rir_config["rir_path"], "**/*.wav"), recursive=True)
                 self.use_rir = True
 
+            print(f" | > rir_files: {len(self.rir_files)}")
             print(f" | > Using RIR Noise Augmentation: with {len(self.rir_files)} audios instances")
 
         self.create_augmentation_global_list()
@@ -66,7 +77,8 @@ class AugmentWAV(object):
             self.global_noise_list.append("RIR_AUG")
 
     def additive_noise(self, noise_type, audio):
-        clean_db = 10 * np.log10(np.mean(audio**2) + 1e-4)
+        # print(f" | > noise_type: {noise_type}")
+        clean_db = 10 * np.log10(np.mean(audio ** 2) + 1e-4)
 
         noise_list = random.sample(
             self.noise_list[noise_type],
@@ -88,7 +100,7 @@ class AugmentWAV(object):
                 self.additive_noise_config[noise_type]["min_snr_in_db"],
                 self.additive_noise_config[noise_type]["max_num_noises"],
             )
-            noise_db = 10 * np.log10(np.mean(noiseaudio**2) + 1e-4)
+            noise_db = 10 * np.log10(np.mean(noiseaudio ** 2) + 1e-4)
             noise_wav = np.sqrt(10 ** ((clean_db - noise_db - noise_snr) / 10)) * noiseaudio
 
             if noises_wav is None:
@@ -107,7 +119,7 @@ class AugmentWAV(object):
 
         rir_file = random.choice(self.rir_files)
         rir = self.ap.load_wav(rir_file, sr=self.ap.sample_rate)
-        rir = rir / np.sqrt(np.sum(rir**2))
+        rir = rir / np.sqrt(np.sum(rir ** 2))
         return signal.convolve(audio, rir, mode=self.rir_config["conv_mode"])[:audio_len]
 
     def apply_one(self, audio):

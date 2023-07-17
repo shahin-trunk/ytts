@@ -1,13 +1,10 @@
-import os
 import sys
 from collections import Counter
-from pathlib import Path
-from typing import Callable, Dict, List, Tuple, Union
-
-import numpy as np
+from typing import Callable, List, Tuple
 
 from TTS.tts.datasets.dataset import *
 from TTS.tts.datasets.formatters import *
+from uuid import uuid4
 
 
 def split_dataset(items, eval_split_max_size=None, eval_split_size=0.01):
@@ -34,11 +31,13 @@ def split_dataset(items, eval_split_max_size=None, eval_split_size=0.01):
         else:
             eval_split_size = int(len(items) * eval_split_size)
 
+    print(f" | > eval_split_size: {eval_split_size}")
+    print(f" | > num_speakers: {len(set(speakers))}")
+
     assert (
-        eval_split_size > 0
-    ), " [!] You do not have enough samples for the evaluation set. You can work around this setting the 'eval_split_size' parameter to a minimum of {}".format(
-        1 / len(items)
-    )
+            eval_split_size > 0
+    ), "[!] You do not have enough samples for the evaluation set. You can work around this setting the " \
+       "'eval_split_size' parameter to a minimum of {}".format(1 / len(items))
     np.random.seed(0)
     np.random.shuffle(items)
     if is_multi_speaker:
@@ -61,18 +60,16 @@ def add_extra_keys(metadata, language, dataset_name):
         # add language name
         item["language"] = language
         # add unique audio name
-        relfilepath = os.path.splitext(os.path.relpath(item["audio_file"], item["root_path"]))[0]
-        audio_unique_name = f"{dataset_name}#{relfilepath}"
-        item["audio_unique_name"] = audio_unique_name
+        item["audio_unique_name"] = str(uuid4())
     return metadata
 
 
 def load_tts_samples(
-    datasets: Union[List[Dict], Dict],
-    eval_split=True,
-    formatter: Callable = None,
-    eval_split_max_size=None,
-    eval_split_size=0.01,
+        datasets: Union[List[Dict], Dict],
+        eval_split=True,
+        formatter: Callable = None,
+        eval_split_max_size=None,
+        eval_split_size=0.01,
 ) -> Tuple[List[List], List[List]]:
     """Parse the dataset from the datasets config, load the samples as a List and load the attention alignments if provided.
     If `formatter` is not None, apply the formatter to the samples else pick the formatter from the available ones based
@@ -100,6 +97,7 @@ def load_tts_samples(
     Returns:
         Tuple[List[List], List[List]: training and evaluation splits of the dataset.
     """
+    print(" > Begin load_tts_samples...")
     meta_data_train_all = []
     meta_data_eval_all = [] if eval_split else None
     if not isinstance(datasets, list):
@@ -124,12 +122,16 @@ def load_tts_samples(
 
         print(f" | > Found {len(meta_data_train)} files in {Path(root_path).resolve()}")
         # load evaluation split if set
+        print(f" | > eval_split: {eval_split}")
         if eval_split:
+            print(f" | > meta_file_val: {meta_file_val}")
             if meta_file_val:
                 meta_data_eval = formatter(root_path, meta_file_val, ignored_speakers=ignored_speakers)
                 meta_data_eval = add_extra_keys(meta_data_eval, language, dataset_name)
             else:
+                print(f" | > eval_split_max_size: {eval_split_max_size}")
                 eval_size_per_dataset = eval_split_max_size // len(datasets) if eval_split_max_size else None
+                print(f" | > eval_size_per_dataset: {eval_size_per_dataset}")
                 meta_data_eval, meta_data_train = split_dataset(meta_data_train, eval_size_per_dataset, eval_split_size)
             meta_data_eval_all += meta_data_eval
         meta_data_train_all += meta_data_train
@@ -145,6 +147,9 @@ def load_tts_samples(
                     meta_data_eval_all[idx].update({"alignment_file": attn_file})
         # set none for the next iter
         formatter = None
+    print(f" | > meta_data_train_all: {len(meta_data_train_all)}")
+    if meta_data_eval_all:
+        print(f" | > meta_data_eval_all: {len(meta_data_eval_all)}")
     return meta_data_train_all, meta_data_eval_all
 
 
