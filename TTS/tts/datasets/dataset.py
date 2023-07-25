@@ -683,6 +683,7 @@ class F0Dataset:
     """
 
     def __init__(
+<<<<<<< HEAD
             self,
             samples: Union[List[List], List[Dict]],
             ap: "AudioProcessor",
@@ -690,6 +691,16 @@ class F0Dataset:
             cache_path: str = None,
             precompute_num_workers=0,
             normalize_f0=True,
+=======
+        self,
+        samples: Union[List[List], List[Dict]],
+        ap: "AudioProcessor",
+        audio_config=None,  # pylint: disable=unused-argument
+        verbose=False,
+        cache_path: str = None,
+        precompute_num_workers=0,
+        normalize_f0=True,
+>>>>>>> upstream/dev
     ):
         self.samples = samples
         self.ap = ap
