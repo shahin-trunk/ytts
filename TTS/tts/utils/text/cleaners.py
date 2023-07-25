@@ -170,6 +170,6 @@ def multilingual_cleaners(text):
 
 
 def ar_bw_cleaners(text):
-    """Pipeline for arabic buckwalter text"""
+    """Pipeline for arabic buck-walter text"""
     text = collapse_whitespace(text)
     return text

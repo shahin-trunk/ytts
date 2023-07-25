@@ -44,30 +44,30 @@ def string2filename(string):
 
 class TTSDataset(Dataset):
     def __init__(
-        self,
-        outputs_per_step: int = 1,
-        compute_linear_spec: bool = False,
-        ap: AudioProcessor = None,
-        samples: List[Dict] = None,
-        tokenizer: "TTSTokenizer" = None,
-        compute_f0: bool = False,
-        compute_energy: bool = False,
-        f0_cache_path: str = None,
-        energy_cache_path: str = None,
-        return_wav: bool = False,
-        batch_group_size: int = 0,
-        min_text_len: int = 0,
-        max_text_len: int = float("inf"),
-        min_audio_len: int = 0,
-        max_audio_len: int = float("inf"),
-        phoneme_cache_path: str = None,
-        precompute_num_workers: int = 0,
-        speaker_id_mapping: Dict = None,
-        d_vector_mapping: Dict = None,
-        language_id_mapping: Dict = None,
-        use_noise_augment: bool = False,
-        start_by_longest: bool = False,
-        verbose: bool = False,
+            self,
+            outputs_per_step: int = 1,
+            compute_linear_spec: bool = False,
+            ap: AudioProcessor = None,
+            samples: List[Dict] = None,
+            tokenizer: "TTSTokenizer" = None,
+            compute_f0: bool = False,
+            compute_energy: bool = False,
+            f0_cache_path: str = None,
+            energy_cache_path: str = None,
+            return_wav: bool = False,
+            batch_group_size: int = 0,
+            min_text_len: int = 0,
+            max_text_len: int = float("inf"),
+            min_audio_len: int = 0,
+            max_audio_len: int = float("inf"),
+            phoneme_cache_path: str = None,
+            precompute_num_workers: int = 0,
+            speaker_id_mapping: Dict = None,
+            d_vector_mapping: Dict = None,
+            language_id_mapping: Dict = None,
+            use_noise_augment: bool = False,
+            start_by_longest: bool = False,
+            verbose: bool = False,
     ):
         """Generic 📂 data loader for `tts` models. It is configurable for different outputs and needs.
 
@@ -584,17 +584,17 @@ class PhonemeDataset(Dataset):
     """
 
     def __init__(
-        self,
-        samples: Union[List[Dict], List[List]],
-        tokenizer: "TTSTokenizer",
-        cache_path: str,
-        precompute_num_workers=0,
+            self,
+            samples: Union[List[Dict], List[List]],
+            tokenizer: "TTSTokenizer",
+            cache_path: str,
+            precompute_num_workers=0,
     ):
         self.samples = samples
         self.tokenizer = tokenizer
         self.cache_path = cache_path
         if cache_path is not None and not os.path.exists(cache_path):
-            os.makedirs(cache_path)
+            os.makedirs(cache_path, exist_ok=True)
             self.precompute(precompute_num_workers)
 
     def __getitem__(self, index):
@@ -683,13 +683,13 @@ class F0Dataset:
     """
 
     def __init__(
-        self,
-        samples: Union[List[List], List[Dict]],
-        ap: "AudioProcessor",
-        verbose=False,
-        cache_path: str = None,
-        precompute_num_workers=0,
-        normalize_f0=True,
+            self,
+            samples: Union[List[List], List[Dict]],
+            ap: "AudioProcessor",
+            verbose=False,
+            cache_path: str = None,
+            precompute_num_workers=0,
+            normalize_f0=True,
     ):
         self.samples = samples
         self.ap = ap
@@ -834,13 +834,13 @@ class EnergyDataset:
     """
 
     def __init__(
-        self,
-        samples: Union[List[List], List[Dict]],
-        ap: "AudioProcessor",
-        verbose=False,
-        cache_path: str = None,
-        precompute_num_workers=0,
-        normalize_energy=True,
+            self,
+            samples: Union[List[List], List[Dict]],
+            ap: "AudioProcessor",
+            verbose=False,
+            cache_path: str = None,
+            precompute_num_workers=0,
+            normalize_energy=True,
     ):
         self.samples = samples
         self.ap = ap

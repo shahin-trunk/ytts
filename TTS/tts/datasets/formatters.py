@@ -740,6 +740,26 @@ def iiai_se(root_path, meta_file, **kwargs):
     return items
 
 
+def iiai_tts(root_path, meta_file, **kwargs):
+    items = []
+    manifest_path = os.path.join(root_path, meta_file)
+    with open(manifest_path) as src_m:
+        for line in src_m:
+            try:
+                jd = json.loads(line.strip("\n").strip())
+                wav_file = os.path.join(root_path, jd["audio_filepath"])
+                text = str(jd["text"]).strip()
+                speaker_name = jd["speaker"]
+                u_fid = jd["u_fid"]
+                items.append(
+                    {"text": text, "audio_file": wav_file, "speaker_name": speaker_name, "root_path": root_path,
+                     "u_fid": u_fid})
+            except Exception as e:
+                print(e)
+
+    return items
+
+
 def iiai_diac_ar_faraza_emotion(root_path, meta_file, **kwargs):
     items = []
     manifest_path = os.path.join(root_path, meta_file)

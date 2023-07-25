@@ -4,7 +4,6 @@ from typing import Callable, List, Tuple
 
 from TTS.tts.datasets.dataset import *
 from TTS.tts.datasets.formatters import *
-from uuid import uuid4
 
 
 def split_dataset(items, eval_split_max_size=None, eval_split_size=0.01):
@@ -60,7 +59,7 @@ def add_extra_keys(metadata, language, dataset_name):
         # add language name
         item["language"] = language
         # add unique audio name
-        item["audio_unique_name"] = str(uuid4())
+        item["audio_unique_name"] = f"{dataset_name}#{item['u_fid']}"
     return metadata
 
 
