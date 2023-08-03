@@ -697,20 +697,6 @@ def iiai_diac_ar_faraza(root_path, meta_file, **kwargs):
     return items
 
 
-def iiai_ar(root_path, meta_file, **kwargs):
-    items = []
-    manifest_path = os.path.join(root_path, meta_file)
-    with open(manifest_path) as src_m:
-        for line in src_m:
-            jd = json.loads(line.strip("\n").strip())
-            wav_file = jd["audio_filepath"]
-            text = str(jd["ar_plain"]).strip()
-            speaker_name = "spk_{}".format(jd["speaker"])
-            items.append({"text": text, "audio_file": wav_file, "speaker_name": speaker_name, "root_path": root_path})
-
-    return items
-
-
 def iiai_transliteration(root_path, meta_file, **kwargs):
     items = []
     manifest_path = os.path.join(root_path, meta_file)
@@ -731,11 +717,22 @@ def iiai_se(root_path, meta_file, **kwargs):
     manifest_path = os.path.join(root_path, meta_file)
     with open(manifest_path) as src_m:
         for line in src_m:
-            jd = json.loads(line.strip("\n").strip())
-            wav_file = os.path.join(base_dir, jd["audio_filepath"])
-            text = ""
-            speaker_name = jd["speaker"]
-            items.append({"text": text, "audio_file": wav_file, "speaker_name": speaker_name, "root_path": base_dir})
+            try:
+                jd = json.loads(line.strip("\n").strip())
+                wav_file = os.path.join(base_dir, jd["audio_filepath"])
+                text = ""
+                speaker_name = jd["speaker"]
+                u_fid = jd["u_fid"]
+                items.append(
+                    {"text": text,
+                     "audio_file": wav_file,
+                     "speaker_name": speaker_name,
+                     "root_path": root_path,
+                     "u_fid": u_fid
+                     }
+                )
+            except Exception as e:
+                print(e)
 
     return items
 
@@ -791,5 +788,35 @@ def iiai_en(root_path, meta_file, **kwargs):
             text = str(jd["text"]).strip()
             speaker_name = "spk_{}".format(jd["speaker"])
             items.append({"text": text, "audio_file": wav_file, "speaker_name": speaker_name, "root_path": root_path})
+
+    return items
+
+
+def iiai_diac_ar_combi(root_path, meta_file, **kwargs):
+    items = []
+    manifest_path = os.path.join(root_path, meta_file)
+    with open(manifest_path) as src_m:
+        for line in src_m:
+            jd = json.loads(line.strip("\n").strip())
+            wav_file = jd["audio_filepath"]
+            text = str(jd["ar_combi"]).strip()
+            speaker_name = "spk_{}".format(jd["speaker"])
+            items.append({"text": text, "audio_file": wav_file, "speaker_name": speaker_name, "root_path": root_path})
+
+    return items
+
+
+def iiai_ar(root_path, meta_file, **kwargs):
+    items = []
+    manifest_path = os.path.join(root_path, meta_file)
+    with open(manifest_path) as src_m:
+        for line in src_m:
+            jd = json.loads(line.strip("\n").strip())
+            wav_file = jd["audio_filepath"]
+            text = str(jd["ar_plain"]).strip()
+            speaker_name = "spk_{}".format(jd["speaker"])
+            u_fid = jd["u_fid"]
+            items.append({"text": text, "audio_file": wav_file, "speaker_name": speaker_name, "root_path": root_path,
+                          "u_fid": u_fid})
 
     return items

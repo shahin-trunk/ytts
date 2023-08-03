@@ -557,6 +557,7 @@ class VitsArgs(Coqpit):
     kernel_size_flow: int = 5
     dilation_rate_flow: int = 1
     num_layers_flow: int = 4
+    num_layers_dp_flow: int = 4
     resblock_type_decoder: str = "1"
     resblock_kernel_sizes_decoder: List[int] = field(default_factory=lambda: [3, 7, 11])
     resblock_dilation_sizes_decoder: List[List[int]] = field(default_factory=lambda: [[1, 3, 5], [1, 3, 5], [1, 3, 5]])
@@ -687,7 +688,7 @@ class Vits(BaseTTS):
                 hidden_channels=self.args.hidden_channels,
                 kernel_size=3,
                 dropout_p=self.args.dropout_p_duration_predictor,
-                num_flows=self.args.num_layers_flow,
+                num_flows=self.args.num_layers_dp_flow,
                 cond_channels=self.embedded_speaker_dim if self.args.condition_dp_on_speaker else 0,
                 language_emb_dim=self.embedded_language_dim,
             )

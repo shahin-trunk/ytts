@@ -10,19 +10,19 @@ from TTS.tts.utils.speakers import SpeakerManager
 from TTS.tts.utils.text.tokenizer import TTSTokenizer
 from TTS.utils.audio import AudioProcessor
 
-DATA_ID = "v79"
+DATA_ID = "v80"
 RUN_EXP_ID = "v79"
 BASE_PATH = "/data/asr/workspace/audio/tts"
 EXPMT_PATH = os.path.join(BASE_PATH, f"expmt/vits/{RUN_EXP_ID}")
 PHONEME_CACHE = os.path.join(BASE_PATH, f"expmt/vits/phoneme_cache")
 SAMPLE_RATE = 44100
-NUM_SPEAKERS = 128
+NUM_SPEAKERS = 2048
 
 CHARACTERS = "".join(sorted(set([ch for ch in
                                  "iyɨʉɯuɪʏʊeøɘəɵɤoɛœɜɞʌɔæɐaɶɑɒᵻʘɓǀɗǃʄǂɠǁʛpbtdʈɖcɟkɡqɢʔɴŋɲɳnɱmʙrʀⱱɾɽɸβfvθðszʃʒʂʐçʝxɣχʁħʕhɦɬɮʋɹɻjɰlɭʎʟˈˌːˑʍwɥʜʢʡɕʑɺɧʲɚ˞ɫˤ̪"])))
-PUNCTUATIONS = "".join(sorted(set([ch for ch in "!'(),-.:;? ,.؟!،؛?"])))
+PUNCTUATIONS = "".join(sorted(set([ch for ch in "'()-: ,.؟!،؛?"])))
 
-RESTORE_PATH = "/data/asr/workspace/audio/tts/models/vits/ar/model_v80_1200k.pt"
+RESTORE_PATH = "/data/asr/workspace/audio/tts/models/vits/ar/model_v79best.pt"
 
 
 def get_dataset(index: int = 1):
@@ -50,22 +50,27 @@ audio_config = VitsAudioConfig(
 vits_args = VitsArgs(
     use_sdp=True,
     num_layers_flow=16,
+    num_heads_text_encoder=6,
+    num_layers_text_encoder=16,
     out_channels=1025,
     use_speaker_embedding=True,
     upsample_rates_decoder=[8, 8, 2, 2, 2],
     upsample_kernel_sizes_decoder=[16, 16, 4, 4, 4],
-    reinit_DP=True,
-    freeze_encoder=True,
+    reinit_text_encoder=True,
+    freeze_DP=True,
+    freeze_PE=True,
+    freeze_flow_decoder=True,
+    freeze_waveform_decoder=True,
     dropout_p_duration_predictor=0.1,
 )
 
 config = VitsConfig(
-    lr_gen=0.0004,
-    lr_disc=0.0004,
+    lr_gen=0.0003,
+    lr_disc=0.0003,
     model_args=vits_args,
     audio=audio_config,
     run_name="vits_iiai",
-    batch_size=48,
+    batch_size=24,
     eval_batch_size=8,
     batch_group_size=5,
     num_loader_workers=8,
@@ -86,7 +91,7 @@ config = VitsConfig(
         blank="<BLNK>",
         characters=CHARACTERS,
         punctuations=PUNCTUATIONS,
-        is_unique=False,
+        is_unique=True,
         is_sorted=True,
     ),
     text_cleaner="phoneme_cleaners",
