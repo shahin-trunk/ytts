@@ -11,6 +11,7 @@ from typing import List
 import pandas as pd
 from tqdm import tqdm
 
+
 ########################
 # DATASETS
 ########################
@@ -806,9 +807,22 @@ def iiai_tts(root_path, meta_file, ignored_speakers=None):
                     if speaker_name in ignored_speakers:
                         print(f"Ignoring: {speaker_name}")
                         continue
-                items.append(
-                    {"text": text, "audio_file": wav_file, "speaker_name": speaker_name, "root_path": root_path,
-                     "u_fid": u_fid})
+
+                if "emotion" in jd:
+                    emotion = jd["emotion"]
+                    items.append({"text": text,
+                                  "audio_file": wav_file,
+                                  "speaker_name": speaker_name,
+                                  "root_path": root_path,
+                                  "emotion": emotion,
+                                  "u_fid": u_fid})
+                else:
+                    items.append({"text": text,
+                                  "audio_file": wav_file,
+                                  "speaker_name": speaker_name,
+                                  "root_path": root_path,
+                                  "u_fid": u_fid})
+
             except Exception as e:
                 print(e)
 

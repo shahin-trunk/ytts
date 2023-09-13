@@ -451,6 +451,16 @@ class BaseTTS(BaseTrainerModel):
             print(f" > `language_ids.json` is saved to {output_path}.")
             print(" > `language_ids_file` is updated in the config.json.")
 
+        if self.emotion_manager is not None:
+            output_path = os.path.join(trainer.output_path, "emotion_ids.json")
+            self.emotion_manager.save_ids_to_file(output_path)
+            trainer.config.emotion_ids_file = output_path
+            if hasattr(trainer.config, "model_args"):
+                trainer.config.model_args.emotion_ids_file = output_path
+            trainer.config.save_json(os.path.join(trainer.output_path, "config.json"))
+            print(f" > `emotion_ids.json` is saved to {output_path}.")
+            print(" > `emotion_ids_file` is updated in the config.json.")
+
 
 class BaseTTSE2E(BaseTTS):
     def _set_model_args(self, config: Coqpit):
