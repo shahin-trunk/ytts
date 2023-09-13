@@ -642,11 +642,13 @@ class Vits(BaseTTS):
             tokenizer: "TTSTokenizer" = None,
             speaker_manager: SpeakerManager = None,
             language_manager: LanguageManager = None,
+            emotion_manager: EmotionManager = None,
     ):
-        super().__init__(config, ap, tokenizer, speaker_manager, language_manager)
+        super().__init__(config, ap, tokenizer, speaker_manager, language_manager, emotion_manager)
 
         self.init_multispeaker(config)
         self.init_multilingual(config)
+        self.init_multi_emotional(config)
         self.init_upsampling()
 
         self.length_scale = self.args.length_scale
@@ -828,16 +830,16 @@ class Vits(BaseTTS):
         if self.args.emotion_ids_file is not None:
             self.emotion_manager = EmotionManager(emotion_ids_file_path=config.emotion_ids_file)
 
-        if self.args.use_emotion_embedding and self.language_manager:
+        if self.args.use_emotion_embedding and self.emotion_manager:
             print(" > initialization of emotion-embedding layers.")
-            self.num_emotions = self.language_manager.num_languages
+            self.num_emotions = self.emotion_manager.num_emotions
             if self.args.num_emotions == 0:
-                self.args.num_emotions = self.language_manager.num_languages
+                self.args.num_emotions = self.emotion_manager.num_emotions
             self.embedded_emotion_dim = self.args.embedded_emotion_dim
             self.emb_e = nn.Embedding(self.num_emotions, self.embedded_emotion_dim)
             torch.nn.init.xavier_uniform_(self.emb_e.weight)
 
-            print(f" | num_emotions: {self.num_languages}")
+            print(f" | num_emotions: {self.num_emotions}")
             print(f" | embedded_emotion_dim: {self.embedded_emotion_dim}")
         else:
             self.embedded_emotion_dim = 0
