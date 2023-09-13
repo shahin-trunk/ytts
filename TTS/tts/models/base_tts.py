@@ -191,6 +191,7 @@ class BaseTTS(BaseTrainerModel):
         pitch = batch["pitch"]
         energy = batch["energy"]
         language_ids = batch["language_ids"]
+        emotion_ids = batch["emotion_ids"]
         max_text_length = torch.max(text_lengths.float())
         max_spec_length = torch.max(mel_lengths.float())
 
@@ -240,6 +241,7 @@ class BaseTTS(BaseTrainerModel):
             "pitch": pitch,
             "energy": energy,
             "language_ids": language_ids,
+            "emotion_ids": emotion_ids,
             "audio_unique_names": batch["audio_unique_names"],
         }
 

@@ -21,15 +21,18 @@ torch.multiprocessing.set_sharing_strategy("file_system")
 def _parse_sample(item):
     language_name = None
     attn_file = None
-    if len(item) == 5:
-        text, wav_file, speaker_name, language_name, attn_file = item
+    emotion_name = None
+    if len(item) == 6:
+        text, wav_file, speaker_name, language_name, emotion_name, attn_file = item
+    elif len(item) == 5:
+        text, wav_file, speaker_name, language_name, emotion_name = item
     elif len(item) == 4:
         text, wav_file, speaker_name, language_name = item
     elif len(item) == 3:
         text, wav_file, speaker_name = item
     else:
         raise ValueError(" [!] Dataset cannot parse the sample.")
-    return text, wav_file, speaker_name, language_name, attn_file
+    return text, wav_file, speaker_name, language_name, emotion_name, attn_file
 
 
 def noise_augment_audio(wav):
@@ -288,6 +291,7 @@ class TTSDataset(Dataset):
             "item_idx": item["audio_file"],
             "speaker_name": item["speaker_name"],
             "language_name": item["language"],
+            "emotion_name": item["emotion"],
             "wav_file_name": os.path.basename(item["audio_file"]),
             "audio_unique_name": item["audio_unique_name"],
         }
