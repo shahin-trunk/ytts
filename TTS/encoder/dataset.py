@@ -83,8 +83,8 @@ class EncoderDataset(Dataset):
             else:
                 class_to_utters[class_name] = [path_, ]
 
-            if len(class_to_utters) % 10000 == 0:
-                print(f" | > class_to_utters: {len(class_to_utters)}")
+            # if len(class_to_utters) % 10000 == 0:
+            #     print(f" | > class_to_utters: {len(class_to_utters)}")
 
         # select classes with number of samples >= self.num_utter_per_class
         class_to_utters = {k: v for (k, v) in class_to_utters.items() if len(v) >= self.num_utter_per_class}
@@ -113,8 +113,8 @@ class EncoderDataset(Dataset):
                     continue
 
             new_items.append({"wav_file_path": path_, "class_name": class_name})
-            if len(new_items) % 10000 == 0:
-                print(f" | > new_items: {len(new_items)}")
+            # if len(new_items) % 10000 == 0:
+            #     print(f" | > new_items: {len(new_items)}")
 
         print(f" | > new_items final: {len(new_items)}")
         return classes, new_items

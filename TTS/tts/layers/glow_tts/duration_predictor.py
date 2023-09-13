@@ -18,12 +18,22 @@ class DurationPredictor(nn.Module):
         dropout_p (float): Dropout rate used after each conv layer.
     """
 
-    def __init__(self, in_channels, hidden_channels, kernel_size, dropout_p, cond_channels=None, language_emb_dim=None):
+    def __init__(self,
+                 in_channels,
+                 hidden_channels,
+                 kernel_size,
+                 dropout_p,
+                 cond_channels=None,
+                 language_emb_dim=None,
+                 emotion_emb_dim=None):
         super().__init__()
 
         # add language embedding dim in the input
         if language_emb_dim:
             in_channels += language_emb_dim
+
+        if emotion_emb_dim:
+            in_channels += emotion_emb_dim
 
         # class arguments
         self.in_channels = in_channels
@@ -44,7 +54,10 @@ class DurationPredictor(nn.Module):
         if language_emb_dim != 0 and language_emb_dim is not None:
             self.cond_lang = nn.Conv1d(language_emb_dim, in_channels, 1)
 
-    def forward(self, x, x_mask, g=None, lang_emb=None):
+        if emotion_emb_dim != 0 and emotion_emb_dim is not None:
+            self.cond_emot = nn.Conv1d(emotion_emb_dim, in_channels, 1)
+
+    def forward(self, x, x_mask, g=None, lang_emb=None, emot_emb=None):
         """
         Shapes:
             - x: :math:`[B, C, T]`
@@ -56,6 +69,9 @@ class DurationPredictor(nn.Module):
 
         if lang_emb is not None:
             x = x + self.cond_lang(lang_emb)
+
+        if emot_emb is not None:
+            x = x + self.cond_emot(emot_emb)
 
         x = self.conv_1(x * x_mask)
         x = torch.relu(x)

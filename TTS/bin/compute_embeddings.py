@@ -13,19 +13,20 @@ from TTS.tts.utils.speakers import SpeakerManager
 
 
 def compute_embeddings(
-    model_path,
-    config_path,
-    output_path,
-    old_speakers_file=None,
-    old_append=False,
-    config_dataset_path=None,
-    formatter_name=None,
-    dataset_name=None,
-    dataset_path=None,
-    meta_file_train=None,
-    meta_file_val=None,
-    disable_cuda=False,
-    no_eval=False,
+        model_path,
+        config_path,
+        output_path,
+        old_speakers_file=None,
+        old_append=False,
+        config_dataset_path=None,
+        formatter_name=None,
+        dataset_name=None,
+        dataset_path=None,
+        meta_file_train=None,
+        meta_file_val=None,
+        disable_cuda=False,
+        no_eval=False,
+        ignored_speakers=None,
 ):
     use_cuda = torch.cuda.is_available() and not disable_cuda
 
@@ -37,6 +38,7 @@ def compute_embeddings(
         c_dataset.formatter = formatter_name
         c_dataset.dataset_name = dataset_name
         c_dataset.path = dataset_path
+        c_dataset.ignored_speakers = ignored_speakers
         if meta_file_train is not None:
             c_dataset.meta_file_train = meta_file_train
         if meta_file_val is not None:
@@ -102,12 +104,12 @@ def compute_embeddings(
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
         description="""Compute embedding vectors for each audio file in a dataset and store them keyed by `{dataset_name}#{file_path}` in a .pth file\n\n"""
-        """
-        Example runs:
-        python TTS/bin/compute_embeddings.py --model_path speaker_encoder_model.pth --config_path speaker_encoder_config.json  --config_dataset_path dataset_config.json
-
-        python TTS/bin/compute_embeddings.py --model_path speaker_encoder_model.pth --config_path speaker_encoder_config.json  --formatter_name coqui --dataset_path /path/to/vctk/dataset --dataset_name my_vctk --meta_file_train /path/to/vctk/metafile_train.csv --meta_file_val /path/to/vctk/metafile_eval.csv
-        """,
+                    """
+                    Example runs:
+                    python TTS/bin/compute_embeddings.py --model_path speaker_encoder_model.pth --config_path speaker_encoder_config.json  --config_dataset_path dataset_config.json
+            
+                    python TTS/bin/compute_embeddings.py --model_path speaker_encoder_model.pth --config_path speaker_encoder_config.json  --formatter_name coqui --dataset_path /path/to/vctk/dataset --dataset_name my_vctk --meta_file_train /path/to/vctk/metafile_train.csv --meta_file_val /path/to/vctk/metafile_eval.csv
+                    """,
         formatter_class=RawTextHelpFormatter,
     )
     parser.add_argument(

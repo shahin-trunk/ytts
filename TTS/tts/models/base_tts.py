@@ -13,10 +13,12 @@ from trainer.torch import DistributedSampler, DistributedSamplerWrapper
 from TTS.model import BaseTrainerModel
 from TTS.tts.datasets.dataset import TTSDataset
 from TTS.tts.utils.data import get_length_balancer_weights
+from TTS.tts.utils.emotions import EmotionManager
 from TTS.tts.utils.languages import LanguageManager, get_language_balancer_weights
-from TTS.tts.utils.speakers import SpeakerManager, get_speaker_balancer_weights, get_speaker_manager
+from TTS.tts.utils.speakers import SpeakerManager, get_speaker_balancer_weights
 from TTS.tts.utils.synthesis import synthesis
 from TTS.tts.utils.visual import plot_alignment, plot_spectrogram
+
 
 # pylint: skip-file
 
@@ -30,12 +32,13 @@ class BaseTTS(BaseTrainerModel):
     MODEL_TYPE = "tts"
 
     def __init__(
-        self,
-        config: Coqpit,
-        ap: "AudioProcessor",
-        tokenizer: "TTSTokenizer",
-        speaker_manager: SpeakerManager = None,
-        language_manager: LanguageManager = None,
+            self,
+            config: Coqpit,
+            ap: "AudioProcessor",
+            tokenizer: "TTSTokenizer",
+            speaker_manager: SpeakerManager = None,
+            language_manager: LanguageManager = None,
+            emotion_manager: EmotionManager = None,
     ):
         super().__init__()
         self.config = config
@@ -43,6 +46,7 @@ class BaseTTS(BaseTrainerModel):
         self.tokenizer = tokenizer
         self.speaker_manager = speaker_manager
         self.language_manager = language_manager
+        self.emotion_manager = emotion_manager
         self._set_model_args(config)
 
     def _set_model_args(self, config: Coqpit):
@@ -207,7 +211,7 @@ class BaseTTS(BaseTrainerModel):
                 largest_idxs = torch.argsort(-dur)[:extra_frames]
                 dur[largest_idxs] -= 1
                 assert (
-                    dur.sum() == mel_lengths[idx]
+                        dur.sum() == mel_lengths[idx]
                 ), f" [!] total duration {dur.sum()} vs spectrogram length {mel_lengths[idx]}"
                 durations[idx, : text_lengths[idx]] = dur
 
@@ -278,14 +282,14 @@ class BaseTTS(BaseTrainerModel):
         return sampler
 
     def get_data_loader(
-        self,
-        config: Coqpit,
-        assets: Dict,
-        is_eval: bool,
-        samples: Union[List[Dict], List[List]],
-        verbose: bool,
-        num_gpus: int,
-        rank: int = None,
+            self,
+            config: Coqpit,
+            assets: Dict,
+            is_eval: bool,
+            samples: Union[List[Dict], List[List]],
+            verbose: bool,
+            num_gpus: int,
+            rank: int = None,
     ) -> "DataLoader":
         if is_eval and not config.run_eval:
             loader = None
@@ -310,6 +314,12 @@ class BaseTTS(BaseTrainerModel):
                 language_id_mapping = self.language_manager.name_to_id if self.args.use_language_embedding else None
             else:
                 language_id_mapping = None
+
+            # setup multi-emotion attributes
+            if self.emotion_manager is not None:
+                emotion_id_mapping = self.emotion_manager.name_to_id if self.args.use_emotion_embedding else None
+            else:
+                emotion_id_mapping = None
 
             # init dataloader
             dataset = TTSDataset(
@@ -336,6 +346,7 @@ class BaseTTS(BaseTrainerModel):
                 tokenizer=self.tokenizer,
                 start_by_longest=config.start_by_longest,
                 language_id_mapping=language_id_mapping,
+                emotion_id_mapping=emotion_id_mapping,
             )
 
             # wait all the DDP process to be ready
@@ -361,7 +372,7 @@ class BaseTTS(BaseTrainerModel):
         return loader
 
     def _get_test_aux_input(
-        self,
+            self,
     ) -> Dict:
         d_vector = None
         if self.config.use_d_vector_file:

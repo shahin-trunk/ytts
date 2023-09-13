@@ -1,0 +1,26 @@
+version: "3.9"
+name: artob-tts
+services:
+  # TTS
+  tts:
+    image: artob/tts:v1
+    restart: unless-stopped
+    labels:
+      traefik.docker.network: traefik-public
+      traefik.enable: true
+      traefik.http.routers.tts-http.entrypoints: http
+      traefik.http.routers.tts-http.rule: Host(`${TTS_HOST:?No TTS_HOST set}`)
+      traefik.http.routers.tts-http.service: tts
+      traefik.http.services.tts.loadbalancer.server.port: 5002
+    volumes:
+      - /root/workspace/nyonai/TTS/TTS:/root/TTS
+    command: ["python3", "TTS/server/server.py", "--model_path", "TTS/server/model_files/arb/v35_ML/model_tts.pth", "--config_path", "TTS/server/model_files/arb/v35_ML/config_tts.json"]
+    expose:
+      - 5002
+    networks:
+      - traefik-public
+networks:
+  traefik-public:
+    name: traefik-public
+    driver: bridge
+    external: true

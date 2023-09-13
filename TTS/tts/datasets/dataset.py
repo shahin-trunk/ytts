@@ -65,6 +65,7 @@ class TTSDataset(Dataset):
             speaker_id_mapping: Dict = None,
             d_vector_mapping: Dict = None,
             language_id_mapping: Dict = None,
+            emotion_id_mapping: Dict = None,
             use_noise_augment: bool = False,
             start_by_longest: bool = False,
             verbose: bool = False,
@@ -147,6 +148,7 @@ class TTSDataset(Dataset):
         self.speaker_id_mapping = speaker_id_mapping
         self.d_vector_mapping = d_vector_mapping
         self.language_id_mapping = language_id_mapping
+        self.emotion_id_mapping = emotion_id_mapping
         self.use_noise_augment = use_noise_augment
         self.start_by_longest = start_by_longest
 
@@ -426,6 +428,12 @@ class TTSDataset(Dataset):
                 language_ids = [self.language_id_mapping[ln] for ln in batch["language_name"]]
             else:
                 language_ids = None
+
+            if self.emotion_id_mapping is not None:
+                emotion_ids = [self.emotion_id_mapping[ln] for ln in batch["emotion_name"]]
+            else:
+                emotion_ids = None
+
             # get pre-computed d-vectors
             if self.d_vector_mapping is not None:
                 embedding_keys = list(batch["audio_unique_name"])
@@ -482,6 +490,9 @@ class TTSDataset(Dataset):
 
             if language_ids is not None:
                 language_ids = torch.LongTensor(language_ids)
+
+            if emotion_ids is not None:
+                emotion_ids = torch.LongTensor(emotion_ids)
 
             # compute linear spectrogram
             linear = None
@@ -550,6 +561,7 @@ class TTSDataset(Dataset):
                 "pitch": pitch,
                 "energy": energy,
                 "language_ids": language_ids,
+                "emotion_ids": emotion_ids,
                 "audio_unique_names": batch["audio_unique_name"],
             }
 

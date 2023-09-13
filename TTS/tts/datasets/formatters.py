@@ -711,33 +711,49 @@ def iiai_transliteration(root_path, meta_file, **kwargs):
     return items
 
 
-def iiai_se(root_path, meta_file, **kwargs):
+def iiai_se(root_path, meta_file, ignored_speakers=None):
     items = []
-    base_dir = "/data/asr/workspace/audio/tts"
     manifest_path = os.path.join(root_path, meta_file)
     with open(manifest_path) as src_m:
         for line in src_m:
             try:
                 jd = json.loads(line.strip("\n").strip())
-                wav_file = os.path.join(base_dir, jd["audio_filepath"])
+                wav_file = str(jd["audio_filepath"]).replace(root_path + "/", "")
+                wav_file = os.path.join(root_path, wav_file).replace("//", "/")
                 text = ""
                 speaker_name = jd["speaker"]
                 u_fid = jd["u_fid"]
-                items.append(
-                    {"text": text,
-                     "audio_file": wav_file,
-                     "speaker_name": speaker_name,
-                     "root_path": root_path,
-                     "u_fid": u_fid
-                     }
-                )
+
+                if ignored_speakers and isinstance(ignored_speakers, list):
+                    if speaker_name in ignored_speakers:
+                        # print(f"Discarded: {wav_file}, speaker_name: {speaker_name}")
+                        continue
+
+                if "duration" not in jd:
+                    # print(f"Discarded: {wav_file}, u_fid: {u_fid}")
+                    continue
+
+                duration = float(jd["duration"])
+                if duration > 1.3:
+                    items.append(
+                        {"text": text,
+                         "audio_file": wav_file,
+                         "speaker_name": speaker_name,
+                         "root_path": root_path,
+                         "u_fid": u_fid
+                         }
+                    )
+                else:
+                    # print(f"Discarded: {wav_file}, duration: {duration}")
+                    pass
             except Exception as e:
                 print(e)
 
     return items
 
 
-def iiai_tts(root_path, meta_file, **kwargs):
+def iiai_tts(root_path, meta_file, ignored_speakers=None):
+    print(f"ignored_speakers: {ignored_speakers}")
     items = []
     manifest_path = os.path.join(root_path, meta_file)
     with open(manifest_path) as src_m:
@@ -748,9 +764,44 @@ def iiai_tts(root_path, meta_file, **kwargs):
                 text = str(jd["text"]).strip()
                 speaker_name = jd["speaker"]
                 u_fid = jd["u_fid"]
+                if ignored_speakers and isinstance(ignored_speakers, list):
+                    if speaker_name in ignored_speakers:
+                        print(f"Ignoring: {speaker_name}")
+                        continue
                 items.append(
                     {"text": text, "audio_file": wav_file, "speaker_name": speaker_name, "root_path": root_path,
                      "u_fid": u_fid})
+            except Exception as e:
+                print(e)
+
+    return items
+
+
+def iiai_tts_ml(root_path, meta_file, ignored_speakers=None):
+    print(f"ignored_speakers: {ignored_speakers}")
+    items = []
+    manifest_path = os.path.join(root_path, meta_file)
+    with open(manifest_path) as src_m:
+        for line in src_m:
+            try:
+                jd = json.loads(line.strip("\n").strip())
+                wav_file = os.path.join(root_path, jd["audio_filepath"])
+                text = str(jd["text"]).strip()
+                speaker_name = jd["speaker"]
+                u_fid = jd["u_fid"]
+                if ignored_speakers and isinstance(ignored_speakers, list):
+                    if speaker_name in ignored_speakers:
+                        print(f"Ignoring: {speaker_name}")
+                        continue
+                if "language" in jd:
+                    language = jd["language"]
+                    items.append(
+                        {"text": text, "audio_file": wav_file, "speaker_name": speaker_name, "root_path": root_path,
+                         "u_fid": u_fid, "language": language})
+                else:
+                    items.append(
+                        {"text": text, "audio_file": wav_file, "speaker_name": speaker_name, "root_path": root_path,
+                         "u_fid": u_fid})
             except Exception as e:
                 print(e)
 

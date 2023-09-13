@@ -1,0 +1,12 @@
+services:
+  # TTS
+  tts:
+    labels:
+      traefik.docker.network: traefik-public
+      traefik.enable: true
+      traefik.http.routers.tts-http.middlewares: https-redirect
+      traefik.http.routers.tts-https.entrypoints: https
+      traefik.http.routers.tts-https.rule: Host(`${TTS_HOST:?No TTS_HOST set}`)
+      traefik.http.routers.tts-https.service: tts
+      traefik.http.routers.tts-https.tls: true
+      traefik.http.routers.tts-https.tls.certresolver: le

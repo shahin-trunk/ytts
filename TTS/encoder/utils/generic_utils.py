@@ -149,6 +149,8 @@ def setup_encoder_model(config: "Coqpit"):
         model = ResNetSpeakerEncoder(
             input_dim=config.model_params["input_dim"],
             proj_dim=config.model_params["proj_dim"],
+            layers=[3, 4, 6, 3],  # [3, 4, 6, 3]
+            num_filters=[32, 64, 128, 256],  # [32, 64, 128, 256]
             log_input=config.model_params.get("log_input", False),
             use_torch_spec=config.model_params.get("use_torch_spec", False),
             audio_config=config.audio,
