@@ -82,15 +82,10 @@ def basic_cleaners(text):
     return text
 
 
-def basic_cleaners_uncase(text):
-    """Basic pipeline that collapses whitespace without transliteration."""
-    text = collapse_whitespace(text)
-    return text
-
-
 def transliteration_cleaners(text):
     """Pipeline for non-English text that transliterates to ASCII."""
-    text = unidecode(text)
+    # text = convert_to_ascii(text)
+    text = lowercase(text)
     text = collapse_whitespace(text)
     return text
 
@@ -166,6 +161,12 @@ def multilingual_cleaners(text):
     text = replace_symbols(text, lang=None)
     text = remove_aux_symbols(text)
     text = collapse_whitespace(text)
+    return text
+
+
+def no_cleaners(text):
+    # remove newline characters
+    text = text.replace("\n", "")
     return text
 
 

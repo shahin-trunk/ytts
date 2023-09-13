@@ -169,6 +169,7 @@ If you don't specify any models, then it uses LJSpeech based English model.
         help="Output wav file path.",
     )
     parser.add_argument("--use_cuda", type=bool, help="Run model on CUDA.", default=False)
+    parser.add_argument("--device", type=str, help="Device to run model on.", default="cpu")
     parser.add_argument(
         "--vocoder_path",
         type=str,
@@ -186,10 +187,21 @@ If you don't specify any models, then it uses LJSpeech based English model.
 
     # args for coqui studio
     parser.add_argument(
+        "--cs_model",
+        type=str,
+        help="Name of the 🐸Coqui Studio model. Available models are `XTTS`, `XTTS-multilingual`, `V1`.",
+    )
+    parser.add_argument(
         "--emotion",
         type=str,
-        help="Emotion to condition the model with. Only available for 🐸Coqui Studio models.",
-        default="Neutral",
+        help="Emotion to condition the model with. Only available for 🐸Coqui Studio `V1` model.",
+        default=None,
+    )
+    parser.add_argument(
+        "--language",
+        type=str,
+        help="Language to condition the model with. Only available for 🐸Coqui Studio `XTTS-multilingual` model.",
+        default=None,
     )
 
     # args for multi-speaker synthesis
@@ -335,8 +347,8 @@ If you don't specify any models, then it uses LJSpeech based English model.
     # CASE3: TTS with coqui studio models
     if "coqui_studio" in args.model_name:
         print(" > Using 🐸Coqui Studio model: ", args.model_name)
-        api = TTS(model_name=args.model_name)
-        api.tts_to_file(text=args.text, emotion=args.emotion, file_path=args.out_path)
+        api = TTS(model_name=args.model_name, cs_api_model=args.cs_model)
+        api.tts_to_file(text=args.text, emotion=args.emotion, file_path=args.out_path, language=args.language)
         print(" > Saving output to ", args.out_path)
         return
 
@@ -380,6 +392,10 @@ If you don't specify any models, then it uses LJSpeech based English model.
     if args.encoder_path is not None:
         encoder_path = args.encoder_path
         encoder_config_path = args.encoder_config_path
+    
+    device = args.device
+    if args.use_cuda:
+        device = "cuda"
 
     # load models
     synthesizer = Synthesizer(
@@ -395,8 +411,7 @@ If you don't specify any models, then it uses LJSpeech based English model.
         vc_config_path,
         model_dir,
         args.voice_dir,
-        args.use_cuda,
-    )
+    ).to(device)
 
     # query speaker ids of a multi-speaker model.
     if args.list_speaker_idxs:
